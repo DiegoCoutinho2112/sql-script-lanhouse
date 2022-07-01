@@ -1,0 +1,363 @@
+/*Aluno: Diego Coutinho - ADS NOITE SENAC*/
+
+/* DDL */
+
+show databases;
+
+create database lanhouse;
+
+use lanhouse; 
+
+create table empregado(
+	cpf varchar(14) primary key not null,
+    nome varchar(45) not null,
+    nomeSocial varchar(45),
+    sexo char(1) not null,
+    salario decimal(6,2) not null,
+    email varchar(45) not null,
+    telefone varchar(11) not null,
+    dataNasc date not null,
+    dataAdmissao datetime not null,
+    dataDemissao datetime,
+    statusEmp tinyint not null
+);
+
+desc empregado;
+
+create table endereco(
+	idEndereco int primary key not null auto_increment,
+    uf varchar(2) not null,
+    cidade varchar(45) not null,
+    bairro varchar(45) not null,
+    rua varchar(45) not null,
+    numero int not null,
+    comp varchar(45),
+	cep varchar(9) not null,
+    empregado_cpf varchar(15) not null,
+    foreign key(empregado_cpf) references empregado(cpf)
+		on delete cascade
+        on update cascade
+);
+
+desc endereco;
+
+create table ferias(
+	idFerias int primary key not null auto_increment,
+    anoReferente year(4) not null,
+    qtdDias int not null,
+    dataInicio date not null,
+    dataFim date not null,
+    empregado_cpf varchar(15) not null,
+    foreign key(empregado_cpf) references empregado(cpf)
+		on update cascade
+        on delete cascade
+); 
+    
+desc ferias;
+    
+create table cliente(
+	idCliente int primary key not null auto_increment,
+    nome varchar(45) not null,
+    email varchar(45) not null unique,
+    senha varchar(45),
+    sexo char(1) not null,
+    dataNasc date not null,
+    telefone varchar(11) not null
+);
+
+desc cliente;
+
+create table vendas(
+	idVendas int primary key not null auto_increment,
+    dataVenda datetime not null,
+    valorTotal decimal(6,2) not null,
+    desconto decimal(6,2),
+    cliente_idCliente int not null,
+    foreign key(cliente_idCliente) references cliente(idCliente),
+    empregado_cpf varchar(15) not null,
+    foreign key(empregado_cpf) references empregado(cpf)
+);
+
+desc vendas;
+
+create table formaPag(
+	idFormaPag int primary key not null auto_increment,
+	tipoPag varchar(45) not null,
+	valorPag decimal(6,2) not null,
+	dataPag datetime not null,
+	vendas_idVendas int not null,
+	foreign key(vendas_idVendas) references vendas(idVendas)
+		on update cascade
+        on delete cascade
+);
+
+desc formaPag;
+
+create table servico(
+	idServico int primary key not null auto_increment,
+	nome varchar(45) not null,
+	valor decimal(5,2)
+); 
+
+desc servico;
+
+create table estoque(
+	idProduto int primary key not null auto_increment,
+    nome varchar(45) not null,
+    valor decimal(6,2) not null,
+    quantidade int not null,
+    categoria varchar(45) not null,
+    descricao varchar(150),
+    validade date,
+    marca varchar(45)
+);
+
+desc estoque;
+
+create table fornecedor(
+	cnpj_cpf varchar(15) primary key not null,
+	nome varchar(45) not null,
+	telefone varchar(11) not null,
+	email varchar(45) not null unique
+); 
+
+desc fornecedor;
+
+create table estoqueFornecedor(
+	estoque_idProduto int not null auto_increment,
+    fornecedor_cnpj_cpf varchar(15) not null,
+    primary key(estoque_idProduto, fornecedor_cnpj_cpf),
+	foreign key(estoque_idProduto) references estoque(idProduto),
+	foreign key(fornecedor_cnpj_cpf) references fornecedor(cnpj_cpf)
+); 
+
+desc estoqueFornecedor;
+
+create table itensVendas(
+	estoque_idProduto int not null,
+    vendas_idVendas int not null,
+    quantidade int not null,
+    primary key(estoque_idProduto, vendas_idVendas),
+	foreign key(estoque_idProduto) references estoque(idProduto),
+    foreign key(vendas_idVendas) references vendas(idVendas)
+);
+
+desc itensVendas;
+
+create table servicoFornecedor(
+	servico_idServico int not null,
+	fornecedor_cnpj_cpf varchar(15) not null,
+	primary key(servico_idServico, fornecedor_cnpj_cpf),
+	foreign key(servico_idServico) references servico(idServico),
+	foreign key(fornecedor_cnpj_cpf) references fornecedor(cnpj_cpf)
+);
+
+desc servicoFornecedor;
+
+create table vendasServico(
+	vendas_idVendas int not null,
+    servico_idServico int not null,
+	quantidade int not null,
+    primary key(vendas_idVendas, servico_idServico),
+    foreign key(vendas_idVendas) references vendas(idVendas),
+    foreign key(servico_idServico) references servico(idServico)
+);
+
+desc vendasServico;
+
+/* DML */
+
+insert into empregado (cpf, nome, sexo, salario, email, telefone, dataNasc, dataAdmissao, statusEmp)
+	values ("783.629.937-65", "Gilberto Passos", 'M', 2500.00, "gpassos@aol.com", "81996575463", '1978-11-04', '2020-06-13 13:04:23', 1),
+		("857.936.487-84", "Jane Paiva", 'F', 2500.00, "jpaiva@hotmail.com", "81995674921", '1983-07-18', '2021-11-22 09:24:34', 1),
+		("756.495.985-02", "Jacques Silva", 'M', 1900.00, "jsilva@aol.com", "83995764536", '1990-12-04', '2021-02-17 11:23:35', 1);
+
+           
+select * from empregado;
+
+insert into endereco (idEndereco, uf, cidade, bairro, rua, numero, cep, empregado_cpf)
+	values (1, "PE", "Recife", "Casa Forte", "R. do Parque", 134, "56740-076", "783.629.937-65"),
+		(2, "PE", "Olinda", "Casa Caiada", "Travessa da Lagoa", 23, "46830-765", "857.936.487-84"),
+        (3, "PB", "Joao Pessoa", "Tambura", "Avenida Severino Correia", 1524, "72667-634", "756.495.985-02");
+        
+select * from endereco;
+        
+insert into ferias (idFerias, anoReferente, qtdDias, dataInicio, dataFim, empregado_cpf)
+	values (1, 2021, 30, '2021-11-04', '2021-11-04', "783.629.937-65"),
+		(2, 2020, 15, '2020-07-01', '2020-07-16', "857.936.487-84"),
+        (3, 2022, 30, '2022-01-02', '2022-02-02', "756.495.985-02");
+        
+select * from endereco;
+
+insert into cliente (idCliente, nome, email, sexo, dataNasc, telefone)
+	values (1, "João Silva", "jsilva@aol.com", 'M', '1994-05-30', 81996457463),
+		(2, "Susana Martins", "smartins@hotmail.com", 'F', '2003-07-11', 81954673542),
+        (3, "Joana Oliveira", "htinha@yahoo.com.br", 'F', '1989-07-12', 81998836736);
+        
+select * from cliente;
+    
+insert into vendas (idVendas, dataVenda, valorTotal, cliente_idCliente, empregado_cpf)
+	values (1, '2022-07-12', 12.00, 1, "783.629.937-65"),
+		(2, '2022-08-13', 25.00, 2, "783.629.937-65"),
+        (3, '2020-11-03', 30.30, 3, "857.936.487-84"),
+        (4, '2021-08-23', 120.50, 2, "857.936.487-84"),
+        (5, '2020-12-03', 45.60, 1, "857.936.487-84"),
+        (6, '2021-06-12', 23.50, 3, "756.495.985-02"),
+        (7, '2022-11-02', 60.50, 1, "756.495.985-02");
+        
+	select * from vendas;
+    
+insert into formaPag (idFormaPag, tipoPag, valorPag, dataPag, vendas_idVendas)
+	values (1, "debito", 12.00, '2022-07-12 14:10:23', 1),
+		(2, "credito", 32.00, '2022-08-13 09:12:20', 2),
+        (3, "especie", 30.30, '2020-11-03 13:20:03', 3),
+        (4, "debito", 120.50, '2021-08-23 10:46:12', 4),
+        (5, "credito", 44.60, '2020-12-03 19:26:07', 5),
+        (6, "especie", 24.50, '2021-06-12 12:34:24', 6),
+        (7, "debito", 60.50, '2022-11-02 08:34:32', 7);
+        
+select * from formaPag; 
+
+insert into servico (idServico, nome, valor)
+	values (1, "hora de internet", 4.00),
+		(2, "xerox de folha", 0.10);
+        
+	select * from servico;
+    
+insert into estoque (idProduto, nome, valor, quantidade, categoria)
+	values (1, "folha de papel", 1.00, 1, "insumo"),
+		(2, "agua", 3.00, 1, "lanche"),
+        (3, "biscoito", 4.00, 1, "lanche");
+        
+select * from estoque; 
+
+insert into fornecedor (cnpj_cpf, nome, telefone, email)
+	values ("674.375.756-32", "Lojao do PC", "81987564352", "lojao@aol.com"),
+		("345.647.831-87", "Nagem", "81987564536", "nagem@hotmail.com"),
+        ("657.846.253-65", "ITHouse", "81985746521", "ithouse@yahoo.com.br");
+        
+select * from fornecedor; 
+
+insert into estoquefornecedor (estoque_idProduto, fornecedor_cnpj_cpf)
+	values (1, "674.375.756-32"),
+		(2, "345.647.831-87"),
+        (3, "657.846.253-65");
+        
+select * from estoquefornecedor; 
+
+insert into itensvendas (estoque_idProduto, vendas_idVendas, quantidade)
+	values (1, 1, 4),
+		(1, 2, 5),
+        (2, 3, 4),
+        (2, 4, 6),
+        (3, 5, 2),
+        (2, 6, 8),
+        (3, 7, 6);
+        
+insert into servicofornecedor (servico_idServico, fornecedor_cnpj_cpf)
+	values (1, "674.375.756-32"),
+		(2, "345.647.831-87");
+        
+select * from servicofornecedor; 
+        
+insert into vendasservico (vendas_idVendas, servico_idServico, quantidade)
+	values (1, 1, 2),
+		(2, 2, 3),
+        (3, 1, 4),
+        (4, 2, 5),
+        (5, 1, 6),
+        (6, 2, 5),
+        (7, 1, 4);
+        
+/* DQL */
+
+/* Lista dos empregados admitidos entre 2022-01-01 e 2022-03-31, trazendo as colunas (Nome Empregado, CPF Empregado, 
+Data Admissão,  Cidade Moradia), ordenado por data de admissão; */
+
+select nome "Nome Empregado", cpf "CPF Empregado", dataAdmissao "Data Admissão", endereco.cidade "Cidade Moradia"
+from empregado
+inner join endereco on endereco.Empregado_CPF = empregado.cpf
+where dataAdmissao between '2022-01-01' and '2022-03-31'
+order by empregado.dataAdmissao;
+
+/* Lista dos empregados que ganham menos que média salarial da LanHouse, trazendo as colunas (Nome Empregado,
+ CPF Empregado, Salário,  Cidade Moradia), ordenado por nome do empregado; */
+ 
+ select nome "Nome Empregado", cpf "CPF Empregado", salario "Salário", endereco.cidade "Cidade Moradia"
+ from empregado
+ inner join endereco on endereco.Empregado_CPF = empregado.cpf
+ where salario < (select avg(empregado.salario) from empregado);
+
+/* Lista dos empregados com a quantidade total de vendas já realiza por cada Empregado, trazendo as colunas 
+(Nome Empregado, CPF Empregado, Sexo, Salario, Quantidade Vendas), ordenado por quantidade total de vendas realizadas; */
+
+select emp.nome "Nome Empregado" , emp.cpf "CPF Empregado", emp.sexo "Sexo", emp.salario "Salário" , COUNT(iv.quantidade) "Quantidade Vendas"
+from empregado emp
+inner join  vendas v on Empregado_cpf = emp.cpf
+inner join itensvendas iv on vendas_idVendas = v.idVendas
+group by emp.nome
+order by COUNT(iv.quantidade);
+
+/* Lista das formas de pagamentos mais utilizadas nas Vendas, informando quantas vendas cada forma de 
+pagamento já foi relacionada, trazendo as colunas (Tipo Forma Pagamento, Quantidade Vendas), 
+ordenado por quantidade total de vendas realizadas; */
+
+select tipoPag "Tipo Forma Pagamento", count(v.idVendas) "Quantidade Vendas"
+from formapag
+inner join vendas v on Vendas_idVendas = v.idVendas
+group by formapag.tipoPag
+order by count(v.idVendas);
+
+/* Lista das Vendas, informando o detalhamento de cada venda quanto os seus itens, trazendo as colunas
+ (Data Venda, Nome Produto, Quantidade ItensVenda, Valor Produto, Valor Total Venda, Nome Empregado), ordenado por Data Venda; */
+ 
+select substr(v.dataVenda, 1, 10) "Data Venda", e.nome "Nome Produto", iv.quantidade "Quantidade ItensVenda", e.valor "Valor Produto", v.valorTotal "Valor Total", emp.nome "Nome Empregado"
+from vendas v, empregado emp, itensvendas iv, estoque e
+where emp.cpf = v.Empregado_CPF and
+	iv.Vendas_idVendas = v.idVendas 
+order by substr(v.dataVenda, 1, 10);
+
+/* Lista das Vendas, informando o detalhamento de cada venda quanto os seus serviços, trazendo as colunas 
+(Data Venda, Nome Serviço, Quantidade VendaServico, Valor Serviço, Valor Total Venda, Nome Empregado), ordenado por Data Venda; */
+
+select substr(v.dataVenda, 1, 10) "Data Venda", vs.quantidade "Quantidade VendaServico", valor "Valor Serviço", v.valorTotal "Valor Total Venda", emp.nome "Nome Empregado"
+from vendas v, servico s, empregado emp, vendasservico vs
+where emp.cpf = v.Empregado_CPF and
+	vs.Servico_idServico = s.idServico
+order by v.dataVenda;
+
+/* Lista dos Produtos, informando qual Fornecedor de cada produto, trazendo as colunas (Nome Produto, Valor Produto, Nome Fornecedor,
+ Email Fornecedor, Telefone Fornecedor), ordenado por Nome Produto; */
+ 
+ select e.nome "Nome Produto", e.valor "Valor Produto", f.nome "Nome Fornecedor", f.email "Email fornecedor", f.telefone "Telefone Fornecedor"
+ from estoque e
+ inner join estoquefornecedor ef on ef.Estoque_idProduto = e.idProduto
+ inner join fornecedor f on f.CNPJ_CPF = ef.Fornecedor_CNPJ_CPF
+ order by e.nome;
+ 
+
+/* Lista dos Serviços, informando qual Fornecedor de cada serviço, trazendo as colunas (Nome Serviço, Valor Serviço, Nome Fornecedor,
+ Email Fornecedor, Telefone Fornecedor), ordenado por Nome Serviço; */
+ 
+ select s.nome "Nome Serviço", s.valor "Valor Serviço", f.nome "Nome Forncedor", f.email "Email Fornecedor", f.telefone "Telefone Fornecedor"
+ from servico s, servicofornecedor sf, fornecedor f
+ where sf.Servico_idServico = s.idServico and
+	sf.Fornecedor_CNPJ_CPF = f.CNPJ_CPF
+ order by s.nome;
+ 
+
+/*  Lista dos Produtos mais vendidos, informando a quantidade (total) de vezes que cada produto participou em vendas, trazendo as colunas
+ (Nome Produto, Quantidade (Total) Vendas), ordenado por quantidade de vezes que o produto participou em vendas; */
+ 
+ select e.nome "Nome Produto", count(v.idVendas) "Quantidade Total Vendas"
+ from estoque e, vendas v
+ group by e.nome
+ order by count(v.idVendas);
+
+/*  Lista dos Serviços mais vendidos, informando a quantidade (total) de vezes que cada serviço participou em vendas, trazendo as colunas
+ (Nome Serviço, Quantidade (Total) Vendas), ordenado por quantidade de vezes que o serviço participou em vendas; */
+ 
+ select s.nome "Nome Serviço", count(v.idVendas) "Quantidade Total Vendas" 
+ from servico s, vendas v
+ group by s.nome
+ order by count(v.idVendas);
